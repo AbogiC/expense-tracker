@@ -1,5 +1,6 @@
 package com.personal.expensetracker.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,11 +13,28 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.personal.expensetracker.R;
 import com.personal.expensetracker.ui.home.expense.AddExpenseFragment;
+import com.personal.expensetracker.util.ExpenseModel;
+import com.personal.expensetracker.util.ExpensesAdapter;
+import com.personal.expensetracker.util.OnItemsClick;
 
-public class HomeFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.List;
+
+public class HomeFragment extends Fragment implements OnItemsClick {
+
+    private RecyclerView recyclerView;
+    private ExpensesAdapter expensesAdapter;
+    Intent intent;
+    private long income = 0, expense = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,6 +46,13 @@ public class HomeFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+        getData();
+
+        expensesAdapter = new ExpensesAdapter(getActivity(), this);
+        recyclerView = view.findViewById(R.id.recycler);
+        recyclerView.setAdapter(expensesAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         return view;
     }
@@ -41,23 +66,15 @@ public class HomeFragment extends Fragment {
         incomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Create an instance of the second fragment
+
+                // Start moving to another fragment
                 AddExpenseFragment secondFragment = new AddExpenseFragment();
-
-                // Get the FragmentManager
                 FragmentManager fragmentManager = getFragmentManager();
-
-                // Start a FragmentTransaction
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-                // Replace the current fragment with the second fragment
                 fragmentTransaction.replace(R.id.nav_host_fragment_content_main, secondFragment);
-
-                // Add the transaction to the back stack (optional)
                 fragmentTransaction.addToBackStack(null);
-
-                // Commit the transaction
                 fragmentTransaction.commit();
+                // End moving to another fragment
             }
         });
         expenseButton.setOnClickListener(new View.OnClickListener() {
@@ -66,5 +83,36 @@ public class HomeFragment extends Fragment {
                 Toast.makeText(getActivity(), "Expense Clicked!", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void getData() {
+        FirebaseFirestore
+                .getInstance()
+                .collection("expenses")
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        expensesAdapter.clear();
+                        List<DocumentSnapshot> dsList = queryDocumentSnapshots.getDocuments();
+                        for (DocumentSnapshot ds : dsList) {
+                            ExpenseModel expenseModel = ds.toObject(ExpenseModel.class);
+                            if (expenseModel != null) {
+                                if(expenseModel.getType().equals("Income")) {
+                                    income += expenseModel.getAmount();
+                                } else {
+                                    expense += expenseModel.getAmount();
+                                }
+                            }
+                            expensesAdapter.add(expenseModel);
+                        }
+//                        setUpGraph();
+                    }
+                });
+    }
+
+    @Override
+    public void onClick(ExpenseModel expenseModel) {
+        Toast.makeText(getActivity(), "Data Clicked!", Toast.LENGTH_SHORT).show();
     }
 }

@@ -15,9 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExpensesAdapter extends RecyclerView.Adapter<ExpensesAdapter.MyViewHolder> {
+    private List<String> dataList;
     private Context context;
     private OnItemsClick onItemsClick;
     private List<ExpenseModel> expenseModelList;
+
+    public ExpensesAdapter(List<String> dataList) {
+        this.dataList = dataList;
+    }
 
     public ExpensesAdapter(Context context, OnItemsClick onItemsClick) {
         this.context = context;

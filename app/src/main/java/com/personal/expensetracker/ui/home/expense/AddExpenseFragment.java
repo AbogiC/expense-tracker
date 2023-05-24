@@ -82,12 +82,14 @@ public class AddExpenseFragment extends Fragment {
 
                 Toast.makeText(getActivity(), "Successfully Add Expense!", Toast.LENGTH_SHORT).show();
 
+                // Start moving to another fragment
                 HomeFragment secondFragment = new HomeFragment();
                 FragmentManager fragmentManager = getFragmentManager();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.replace(R.id.nav_host_fragment_content_main, secondFragment);
                 fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
+                // End moving to another fragment
             }
         });
     }

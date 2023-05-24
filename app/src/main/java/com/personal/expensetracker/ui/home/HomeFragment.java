@@ -16,6 +16,10 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -30,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HomeFragment extends Fragment implements OnItemsClick {
-
     private RecyclerView recyclerView;
     private ExpensesAdapter expensesAdapter;
     Intent intent;
@@ -47,8 +50,6 @@ public class HomeFragment extends Fragment implements OnItemsClick {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        getData();
-
         expensesAdapter = new ExpensesAdapter(getActivity(), this);
         recyclerView = view.findViewById(R.id.recycler);
         recyclerView.setAdapter(expensesAdapter);
@@ -63,6 +64,11 @@ public class HomeFragment extends Fragment implements OnItemsClick {
 
         TextView incomeButton = view.findViewById(R.id.addIncome);
         TextView expenseButton = view.findViewById(R.id.addExpense);
+
+        PieChart pieChart = view.findViewById(R.id.pieChart);
+
+        getData(pieChart);
+
         incomeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -85,7 +91,7 @@ public class HomeFragment extends Fragment implements OnItemsClick {
         });
     }
 
-    private void getData() {
+    private void getData(PieChart pieChart) {
         FirebaseFirestore
                 .getInstance()
                 .collection("expenses")
@@ -106,9 +112,29 @@ public class HomeFragment extends Fragment implements OnItemsClick {
                             }
                             expensesAdapter.add(expenseModel);
                         }
-//                        setUpGraph();
+                        setUpGraph(pieChart);
                     }
                 });
+    }
+
+    private void setUpGraph(PieChart pieChart) {
+        List<PieEntry> pieEntryList = new ArrayList<>();
+        List<Integer> colorsList = new ArrayList<>();
+        if(income != 0) {
+            pieEntryList.add(new PieEntry(income, "Income"));
+            colorsList.add(getResources().getColor(R.color.teal_700));
+        }
+        if(expense != 0) {
+            pieEntryList.add(new PieEntry(expense, "Expense"));
+            colorsList.add(getResources().getColor(R.color.teal_200));
+        }
+
+        PieDataSet pieDataSet = new PieDataSet(pieEntryList, String.valueOf(income-expense));
+        pieDataSet.setColors(colorsList);
+        PieData pieData = new PieData(pieDataSet);
+
+        pieChart.setData(pieData);
+        pieChart.invalidate();
     }
 
     @Override
